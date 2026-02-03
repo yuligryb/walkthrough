@@ -78,6 +78,29 @@ function create() {
         stroke: '#000',
         strokeThickness: 4
     }).setOrigin(0.5);
+
+    // Create the player (spaceship)
+    player = this.physics.add.sprite(gameWidth / 2, gameHeight - 100, 'ship');
+    player.setCollideWorldBounds(true);
+    player.setScale(3.5);
+    player.setRotation(0); // Point upward
+    
+    // Score display
+    scoreText = this.add.text(20, 20, 'Score: 0 / 100', {
+        fontSize: '36px',
+        fill: '#fff',
+        fontStyle: 'bold',
+        stroke: '#000',
+        strokeThickness: 4
+    });
+    
+    // Instructions
+    this.add.text(gameWidth / 2, gameHeight - 40, 'Arrow Keys or WASD to Move', {
+        fontSize: '24px',
+        fill: '#fff',
+        stroke: '#000',
+        strokeThickness: 3
+    }).setOrigin(0.5);
 }
 
 // ========================================
