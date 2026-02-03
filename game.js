@@ -78,12 +78,27 @@ function create() {
         stroke: '#000',
         strokeThickness: 4
     }).setOrigin(0.5);
-
+    
     // Create the player (spaceship)
     player = this.physics.add.sprite(gameWidth / 2, gameHeight - 100, 'ship');
     player.setCollideWorldBounds(true);
     player.setScale(3.5);
     player.setRotation(0); // Point upward
+    
+    // Create stars group
+    stars = this.physics.add.group();
+    
+    // Create asteroids group
+    asteroids = this.physics.add.group();
+    
+    // Setup keyboard controls
+    cursors = this.input.keyboard.createCursorKeys();
+    wasd = this.input.keyboard.addKeys({
+        up: 'W',
+        left: 'A',
+        down: 'S',
+        right: 'D'
+    });
     
     // Score display
     scoreText = this.add.text(20, 20, 'Score: 0 / 100', {
@@ -117,6 +132,10 @@ function create() {
         callbackScope: this,
         loop: true
     });
+    
+    // Check collisions
+    this.physics.add.overlap(player, stars, collectStar, null, this);
+    this.physics.add.overlap(player, asteroids, hitAsteroid, null, this);
 }
 
 // ========================================
@@ -146,6 +165,144 @@ function spawnAsteroid() {
     asteroid.setAngularVelocity(100);
 }
 
+// ========================================
+// COLLECT STAR
+// ========================================
+function collectStar(player, star) {
+    star.destroy();
+    
+    // Add 10 points
+    score += 10;
+    scoreText.setText('Score: ' + score + ' / 100');
+    
+    // Play a simple scale animation
+    this.tweens.add({
+        targets: player,
+        scaleX: 2.8,
+        scaleY: 2.8,
+        duration: 100,
+        yoyo: true
+    });
+    
+    // Check if player won
+    if (score >= 100) {
+        gameWon = true;
+        showWinScreen.call(this);
+    }
+}
+
+// ========================================
+// HIT ASTEROID - Game Over
+// ========================================
+function hitAsteroid(player, asteroid) {
+    this.physics.pause();
+    player.setTint(0xff0000);
+    gameOver = true;
+    
+    showGameOver.call(this);
+}
+
+// ========================================
+// WIN SCREEN
+// ========================================
+function showWinScreen() {
+    this.physics.pause();
+    
+    // Dark overlay
+    let overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0x000000, 0.8);
+    
+    // Win Box
+    let box = this.add.rectangle(gameWidth / 2, gameHeight / 2, 600, 400, 0x1b5e20);
+    box.setStrokeStyle(8, 0xffd700);
+    
+    // Win Text
+    this.add.text(gameWidth / 2, gameHeight / 2 - 150, 'YOU WIN!', {
+        fontSize: '72px',
+        fill: '#ffeb3b',
+        fontStyle: 'bold'
+    }).setOrigin(0.5);
+    
+    // Final Score
+    this.add.text(gameWidth / 2, gameHeight / 2 - 50, 'You collected 100 points!', {
+        fontSize: '40px',
+        fill: '#ffffff',
+        fontStyle: 'bold'
+    }).setOrigin(0.5);
+    
+    // Play Again Button
+    let playAgainButton = this.add.text(gameWidth / 2, gameHeight / 2 + 80, 'PLAY AGAIN', {
+        fontSize: '36px',
+        fill: '#ffffff',
+        backgroundColor: '#4CAF50',
+        padding: { x: 40, y: 20 }
+    }).setOrigin(0.5);
+    
+    playAgainButton.setInteractive({ useHandCursor: true });
+    
+    playAgainButton.on('pointerdown', () => {
+        score = 0;
+        gameWon = false;
+        this.scene.restart();
+    });
+    
+    playAgainButton.on('pointerover', () => {
+        playAgainButton.setStyle({ backgroundColor: '#45a049' });
+    });
+    
+    playAgainButton.on('pointerout', () => {
+        playAgainButton.setStyle({ backgroundColor: '#4CAF50' });
+    });
+}
+
+// ========================================
+// GAME OVER SCREEN
+// ========================================
+function showGameOver() {
+    // Dark overlay
+    let overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0x000000, 0.8);
+    
+    // Game Over Box
+    let box = this.add.rectangle(gameWidth / 2, gameHeight / 2, 600, 400, 0x222222);
+    box.setStrokeStyle(8, 0xffffff);
+    
+    // Game Over Text
+    this.add.text(gameWidth / 2, gameHeight / 2 - 150, 'GAME OVER!', {
+        fontSize: '72px',
+        fill: '#ff4444',
+        fontStyle: 'bold'
+    }).setOrigin(0.5);
+    
+    // Final Score
+    this.add.text(gameWidth / 2, gameHeight / 2 - 50, 'Score: ' + score + ' / 100', {
+        fontSize: '40px',
+        fill: '#ffffff',
+        fontStyle: 'bold'
+    }).setOrigin(0.5);
+    
+    // Play Again Button
+    let playAgainButton = this.add.text(gameWidth / 2, gameHeight / 2 + 80, 'PLAY AGAIN', {
+        fontSize: '36px',
+        fill: '#ffffff',
+        backgroundColor: '#4CAF50',
+        padding: { x: 40, y: 20 }
+    }).setOrigin(0.5);
+    
+    playAgainButton.setInteractive({ useHandCursor: true });
+    
+    playAgainButton.on('pointerdown', () => {
+        score = 0;
+        gameOver = false;
+        this.scene.restart();
+    });
+    
+    playAgainButton.on('pointerover', () => {
+        playAgainButton.setStyle({ backgroundColor: '#45a049' });
+    });
+    
+    playAgainButton.on('pointerout', () => {
+        playAgainButton.setStyle({ backgroundColor: '#4CAF50' });
+    });
+}
 
 // ========================================
 // UPDATE - Runs Every Frame
@@ -165,6 +322,7 @@ function update() {
     else {
         player.setVelocityX(0);
     }
+    
     // Clean up stars that fall off screen
     stars.children.entries.forEach(star => {
         if (star.y > gameHeight + 20) star.destroy();
