@@ -107,7 +107,20 @@ function create() {
 // UPDATE - Runs Every Frame
 // ========================================
 function update() {
-    // We'll add movement here in Step 3!
+    if (gameOver || gameWon) return;
+    
+    // Move player left
+    if (cursors.left.isDown || wasd.left.isDown) {
+        player.setVelocityX(-350);
+    }
+    // Move player right
+    else if (cursors.right.isDown || wasd.right.isDown) {
+        player.setVelocityX(350);
+    }
+    // Stop moving
+    else {
+        player.setVelocityX(0);
+    }
 }
 
 // ========================================
